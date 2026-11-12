@@ -1,0 +1,91 @@
+name: train
+
+on:
+  schedule:
+    - cron: "17 2 * * *"  # off the top of the hour: GitHub drops scheduled runs at :00 under load
+  workflow_dispatch:
+
+permissions:
+  contents: write  # push the retrained JSON to main
+  actions: write   # start pages.yml (a push made with GITHUB_TOKEN does not trigger workflows)
+
+concurrency:
+  group: train
+  cancel-in-progress: false
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    env:
+      OMP_NUM_THREADS: "1"  # gradient boosting oversubscribes the runner's cores otherwise
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/checkout@v7
+        with:
+          ref: data
+          path: data
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Python tests
+        run: python -m pytest -q -W error
+
+      - name: Train
+        run: python -m model.train data web
+
+      - name: Browser tests (parity with the new model)
+        run: node --test 'web/*.test.js'
+
+      - name: Did the model change beyond trained_at?
+        id: diff
+        run: |
+          python - <<'EOF'
+          import json, os, subprocess
+
+          FILES = ["web/model.json", "web/profiles.json", "web/flows.json", "web/fixtures.json"]
+
+          def strip(obj):
+              if isinstance(obj, dict):
+                  obj.pop("trained_at", None)
+              return obj
+
+          changed = False
+          for f in FILES:
+              old = subprocess.run(["git", "show", f"HEAD:{f}"], capture_output=True, text=True)
+              with open(f, encoding="utf-8") as fh:
+                  new = strip(json.load(fh))
+              if old.returncode != 0 or strip(json.loads(old.stdout)) != new:
+                  print(f"changed: {f}")
+                  changed = True
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"changed={str(changed).lower()}\n")
+          EOF
+
+      - name: Commit and push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/model.json web/profiles.json web/flows.json web/fixtures.json
+          git commit -q -m "chore: retrain model $(date -u +%Y-%m-%d)"
+          git push origin HEAD:main || (git pull --rebase origin main && git push origin HEAD:main)
+
+      - name: Deploy the site
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref main --repo "$GITHUB_REPOSITORY"
