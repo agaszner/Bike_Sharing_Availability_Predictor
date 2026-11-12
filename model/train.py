@@ -11,7 +11,7 @@ from sklearn.metrics import average_precision_score, brier_score_loss, precision
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-from model import features, load
+from model import features, flows, load
 
 NETWORKS = ["mol-bubi", "wienmobil-rad", "bicikelj", "slovnaft-bajk"]
 TARGETS = ("empty", "full")
@@ -125,6 +125,7 @@ def run(data_dir, out_dir):
     # Profiles for the browser come from all data; the exported coefficients stay those fitted on train.
     for name, obj in (("model", model), ("profiles", features.build_profiles(df, stations)), ("fixtures", fixtures)):
         (out / f"{name}.json").write_text(json.dumps(obj, allow_nan=False, ensure_ascii=False), encoding="utf-8")
+    flows.run(data_dir, out_dir)
     return model
 
 
