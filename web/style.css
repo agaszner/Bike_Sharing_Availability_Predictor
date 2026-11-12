@@ -35,6 +35,11 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
   padding: 2px 8px; border-radius: 999px; background: #FFF3BF; color: #7A5B00; font-size: 11px; font-weight: 600;
 }
 
+.demo-note {
+  margin-bottom: 16px; padding: 8px 12px; border-radius: 8px; background: #FFF3BF; color: #7A5B00;
+  font-size: 13px; font-weight: 500;
+}
+
 /* Layout */
 main { flex: 1; min-height: 0; }
 .view { height: 100%; }

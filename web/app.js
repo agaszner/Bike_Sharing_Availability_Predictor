@@ -1,7 +1,7 @@
 // Page shell and Live map view: fetching, Leaflet markers, station panel, hash routing. Logic lives in app-logic.js.
 import {stationRisk} from './predict.js';
 import {NETWORKS, parseHash, weatherFrom, stationsFrom, historyFromLatest, riskInput, markerState, stateWords,
-  topRisk, statusText, dockInfo, subtitle, sparkPaths, stationOptions} from './app-logic.js';
+  topRisk, statusText, dockInfo, subtitle, sparkPaths, stationOptions, DEMO_NOTE} from './app-logic.js';
 import {mountFlows} from './flows.js';
 import {mountModel} from './model-view.js';
 
@@ -19,7 +19,7 @@ const initial = parseHash(location.hash);
 export const state = {
   network: initial.network, view: initial.view,
   stations: [], risks: new Map(), model: null, profiles: null, weather: null, flows: null,
-  latest: null, updated: null, failed: false, selected: null, loaded: false,
+  latest: null, updated: null, failed: false, selected: null, loaded: false, demo: DEMO,
 };
 
 const listeners = [];
@@ -197,6 +197,8 @@ function renderPanel() {
 function renderStatus() {
   $('#status-text').textContent = statusText(state);
   $('#demo-badge').hidden = !DEMO;
+  $('#demo-note').textContent = DEMO_NOTE;
+  $('#demo-note').hidden = !DEMO;
 }
 
 function select(id) {

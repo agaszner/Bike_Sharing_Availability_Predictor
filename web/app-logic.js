@@ -11,6 +11,7 @@ export const NETWORKS = [
   {id: 'slovnaft-bajk', name: 'Bratislava', lat: 48.1486, lon: 17.1077},
 ];
 export const VIEWS = ['map', 'flows', 'model'];
+export const DEMO_NOTE = 'Synthetic demo data — these numbers are not real results.';
 
 export function parseHash(hash) {
   const [network, view] = hash.replace(/^#/, '').split('/');

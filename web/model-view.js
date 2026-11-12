@@ -1,5 +1,5 @@
 // Model view: test-window metrics, precision-recall and calibration charts, per-city table. Every number is from state.model.
-import {NETWORKS} from './app-logic.js';
+import {NETWORKS, DEMO_NOTE} from './app-logic.js';
 import {fmtMetric, fmtCount, isTrained, targetMetrics, polyPoints, testWindowText, testWindowDays} from './view-logic.js';
 import {el, svg} from './dom.js';
 
@@ -91,7 +91,7 @@ function table(model) {
       el('tbody', {}, ...rows))));
 }
 
-function render(root, model) {
+function render(root, model, demo) {
   const m = targetMetrics(model, 'all', target);
   const win = model.test_window;
   const days = testWindowDays(win);
@@ -101,7 +101,7 @@ function render(root, model) {
         name[0].toUpperCase() + name.slice(1));
       b.addEventListener('click', () => {
         target = t;
-        render(root, model);
+        render(root, model, demo);
         root.querySelector(`[data-target="${t}"]`).focus();
       });
       return b;
@@ -112,6 +112,7 @@ function render(root, model) {
   };
 
   root.replaceChildren(el('div', {class: 'model-page'},
+    ...(demo ? [el('p', {class: 'demo-note', role: 'note'}, DEMO_NOTE)] : []),
     el('div', {class: 'model-head'},
       el('div', {}, el('h2', {}, 'How good are the predictions?'),
         el('p', {class: 'muted'}, `Will a station be empty or full within 30 minutes? Tested on ${testWindowText(win) ?? '—'}, `
@@ -135,5 +136,5 @@ export function mountModel(root, state) {
     root.replaceChildren(el('p', {class: 'coming'}, state.loaded ? NOT_TRAINED : 'Loading…'));
     return;
   }
-  render(root, state.model);
+  render(root, state.model, state.demo);
 }
