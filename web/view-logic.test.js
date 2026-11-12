@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {hourText, signed, zoneRadius, arrowWidth, heatColor, arrowPath, hasFlowData, polyPoints, fmtMetric, fmtCount,
-  isTrained, testWindowText, testWindowDays} from './view-logic.js';
+  isTrained, targetMetrics, testWindowText, testWindowDays} from './view-logic.js';
 
 test('hourText pads to HH:00', () => {
   assert.equal(hourText(8), '08:00');
@@ -111,4 +111,14 @@ test('testWindowDays rounds the duration, at least one day', () => {
   assert.equal(testWindowDays({from: '2026-11-28T00:00:00Z', to: '2026-12-02T23:50:00Z'}), 5);
   assert.equal(testWindowDays({from: '2026-11-12T14:37:00Z', to: '2026-11-12T14:37:00Z'}), 1);
   assert.equal(testWindowDays(undefined), null);
+});
+
+test('targetMetrics returns metrics only for a trained target', () => {
+  const metrics = {all: {empty: {pr_auc: 0.8}, full: {pr_auc: 0.7}}, 'mol-bubi': {empty: {pr_auc: 0.6}}};
+  const model = {targets: {empty: {coef: []}, full: null}, metrics};
+  assert.deepEqual(targetMetrics(model, 'all', 'empty'), {pr_auc: 0.8});
+  assert.equal(targetMetrics(model, 'all', 'full'), null);
+  assert.deepEqual(targetMetrics(model, 'mol-bubi', 'empty'), {pr_auc: 0.6});
+  assert.equal(targetMetrics(model, 'wienmobil-rad', 'empty'), null);
+  assert.equal(targetMetrics(null, 'all', 'empty'), null);
 });

@@ -57,6 +57,9 @@ export const fmtCount = (n) => (Number.isFinite(n) ? n.toLocaleString('en-GB') :
 
 export const isTrained = (model) => Boolean(model?.targets?.empty || model?.targets?.full);
 
+// Metrics of an untrained target are not shown, whatever the file holds for them.
+export const targetMetrics = (model, scope, t) => (model?.targets?.[t] ? model.metrics?.[scope]?.[t] ?? null : null);
+
 const dateFmt = new Intl.DateTimeFormat('en-GB', {timeZone: 'Europe/Budapest', day: 'numeric', month: 'short', year: 'numeric'});
 const span = (w) => {
   const from = Date.parse(w?.from), to = Date.parse(w?.to);

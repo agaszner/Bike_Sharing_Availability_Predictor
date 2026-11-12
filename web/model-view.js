@@ -1,6 +1,6 @@
 // Model view: test-window metrics, precision-recall and calibration charts, per-city table. Every number is from state.model.
 import {NETWORKS} from './app-logic.js';
-import {fmtMetric, fmtCount, isTrained, polyPoints, testWindowText, testWindowDays} from './view-logic.js';
+import {fmtMetric, fmtCount, isTrained, targetMetrics, polyPoints, testWindowText, testWindowDays} from './view-logic.js';
 import {el, svg} from './dom.js';
 
 const CHART_W = 400;
@@ -79,7 +79,7 @@ function charts(model, m) {
 function table(model) {
   const cols = ['City', 'Stations', 'Model', 'Baseline', 'Gradient boosting'];
   const rows = NETWORKS.map((n) => {
-    const m = model.metrics?.[n.id]?.[target];
+    const m = targetMetrics(model, n.id, target);
     return el('tr', {}, el('th', {scope: 'row'}, n.name),
       ...[fmtCount(model.test_window?.stations?.[n.id]), fmtMetric(m?.pr_auc), fmtMetric(m?.pr_auc_baseline),
         fmtMetric(m?.pr_auc_hgb)].map((v) => el('td', {}, v)));
@@ -92,8 +92,7 @@ function table(model) {
 }
 
 function render(root, model) {
-  const all = model.metrics?.all ?? {};
-  const m = all[target];
+  const m = targetMetrics(model, 'all', target);
   const win = model.test_window;
   const days = testWindowDays(win);
   const toggle = el('div', {class: 'seg', role: 'group', 'aria-label': 'Prediction target'},
@@ -107,8 +106,10 @@ function render(root, model) {
       });
       return b;
     }));
-  const prCard = (t) => card(`PR-AUC · ${TARGETS[t]}`, fmtMetric(all[t]?.pr_auc),
-    `baseline ${fmtMetric(all[t]?.pr_auc_baseline)}`);
+  const prCard = (t) => {
+    const tm = targetMetrics(model, 'all', t);
+    return card(`PR-AUC · ${TARGETS[t]}`, fmtMetric(tm?.pr_auc), `baseline ${fmtMetric(tm?.pr_auc_baseline)}`);
+  };
 
   root.replaceChildren(el('div', {class: 'model-page'},
     el('div', {class: 'model-head'},
