@@ -100,3 +100,14 @@ def test_profile_rates_use_only_eligible_rows():
     p = build_profiles(train, stations_df(d=False, v=True))["n"]
     assert p["d"]["empty"][8] == 0.0            # all labelled rows: 0.25; rows with bikes > 0: 0.0
     assert p["_default"]["full"][8] == 0.0      # virtual station's full labels do not count
+
+
+def test_station_missing_from_station_list_is_not_dock():
+    df = add_lags(add_labels(pd.concat([
+        snap(list(range(0, 80, 10)), [2] * 8, slots=[1, 1, 0, 0, 1, 1, 0, 0], station="gone"),
+        snap(list(range(0, 80, 10)), [2] * 8, slots=[3] * 8, station="listed"),
+    ])))
+    p = build_profiles(df, stations_df(listed=True))
+    assert p["n"]["gone"]["dock"] is False      # complete slots, but absent from stations/<network>.json
+    X, _ = build_matrix(df, weather_df(), p, "full")
+    assert len(X) == 0

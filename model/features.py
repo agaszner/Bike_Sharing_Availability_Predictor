@@ -58,13 +58,14 @@ def add_lags(df):
 
 def build_profiles(train_df, stations_df):
     """Per network: `_default` hourly target rates, and per station cap, dock and hourly rates (gaps → default).
-    cap and dock use all training rows. A target's rates are the mean label at that local hour over the rows
-    eligible for it (Decision 3): "empty" → bikes > 0; "full" → dock station with slots > 0."""
+    cap and dock use all training rows; a station missing from `stations_df` counts as virtual. A target's rates
+    are the mean label at that local hour over the rows eligible for it (Decision 3): "empty" → bikes > 0;
+    "full" → dock station with slots > 0."""
     t = train_df.assign(hour=train_df.ts.dt.tz_convert(TZ).dt.hour,
                         cap=train_df.bikes + train_df.slots.fillna(0), nan_slots=train_df.slots.isna())
     st = t.groupby(["network", "station_id"]).agg(cap=("cap", "max"), nan_slots=("nan_slots", "any"))
     virtual = stations_df.set_index(["network", "station_id"]).virtual
-    st["dock"] = [not bool(virtual.get(k, False)) and not bool(ns) for k, ns in zip(st.index, st.nan_slots)]
+    st["dock"] = [not bool(virtual.get(k, True)) and not bool(ns) for k, ns in zip(st.index, st.nan_slots)]
     dock_row = st.dock.reindex(pd.MultiIndex.from_frame(t[["network", "station_id"]])).to_numpy(bool)
     t["empty_30"] = t.empty_30.where((t.bikes > 0).to_numpy())
     t["full_30"] = t.full_30.where(dock_row & (t.slots > 0).to_numpy())
