@@ -70,6 +70,13 @@ test('stationRisk: dock with no free slot is off, null slots gives no full predi
   assert.equal(stationRisk({...base, threshold: 0}, model).state, r.pEmpty >= r.pFull ? 'empty' : 'full');
   assert.equal(stationRisk({...base, threshold: 1.01}, model).state, 'ok');
 });
+test('stationRisk is unknown when no probability is computed, but off still wins', () => {
+  const onlyFull = {...model, targets: {empty: null, full: model.targets.full}};
+  const unknown = {state: 'unknown', pEmpty: null, pFull: null};
+  assert.deepEqual(stationRisk({...base, profile: {...base.profile, dock: false}}, onlyFull), unknown);
+  assert.deepEqual(stationRisk({...base, slots: null}, onlyFull), unknown);
+  assert.equal(stationRisk({...base, bikes: 0}, undefined).state, 'off');
+});
 test('stationRisk without weather uses the scaler means of temp, precip, wind', () => {
   const r = stationRisk({...base, weather: null}, model);
   for (const [name, p] of [['empty', r.pEmpty], ['full', r.pFull]]) {

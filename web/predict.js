@@ -55,6 +55,7 @@ export function stationRisk(input, model) {
     return predict(t, features({...input, targetName: name, weather}));
   };
   const pEmpty = p('empty'), pFull = dock && input.slots != null ? p('full') : null;
+  if (pEmpty === null && pFull === null) return {state: 'unknown', pEmpty, pFull};
   const hi = Math.max(pEmpty ?? -1, pFull ?? -1);
   const state = hi < input.threshold ? 'ok' : hi === pEmpty ? 'empty' : 'full';
   return {state, pEmpty, pFull};
