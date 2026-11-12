@@ -16,21 +16,21 @@ days the model never saw.
 
 ![Live map of Budapest with a selected station](docs/screenshots/live-map.png)
 
-*Taken on 2026-11-12, before the first training run. Because no model exists yet, the markers are only green
+*Taken on 2026-11-12, before a model could be trained. Because no model exists yet, the markers are only green
 (available) and grey (empty or full now), and the panel says "Prediction not available yet".*
 
 **Flows**
 
 ![Flows view with zone circles, arrows and the hourly heatmap](docs/screenshots/flows.png)
 
-*Shown with synthetic demo data; real numbers appear after about two weeks of collection. The zones are the real
+*Shown with synthetic demo data; real numbers appear once the nightly training has enough data. The zones are the real
 Budapest zones, but the net flows and arrows were made up for the screenshot.*
 
 **Model**
 
 ![Model view with metric cards, precision-recall and calibration charts](docs/screenshots/model.png)
 
-*Shown with synthetic demo data (`?demo=1`); real numbers appear after about two weeks of collection.*
+*Shown with synthetic demo data (`?demo=1`); real numbers appear once the nightly training has enough data.*
 
 ## How to use it
 
@@ -114,7 +114,7 @@ Run the tests (Python: collector and model; JavaScript: the browser code, with N
 
 ```sh
 .venv/bin/python -m pytest -q -W error      # OMP_NUM_THREADS=1 in front makes it several times faster
-node --test 'web/*.test.js'                 # the quotes matter: node expands the glob, not the shell
+node --test 'web/*.test.js'
 ```
 
 Regenerate the browser parity fixture after changing the feature code:
@@ -233,7 +233,8 @@ rows. (`build_profiles` in `model/features.py`.)
 
 ### Metrics
 
-All metrics are computed on the test rows (overall and per city, for each target):
+All metrics are computed on the test rows, for each target. The scalar metrics (PR-AUC and Brier score) are
+computed overall and per city; the precision-recall curves and the calibration plot use the overall test rows only:
 
 - **PR-AUC**, computed as average precision (`sklearn.metrics.average_precision_score`), for the logistic regression,
   the baseline and gradient boosting.
@@ -251,22 +252,24 @@ Model view, but it is not deployed, because a tree ensemble cannot be evaluated 
 
 ### Browser/Python parity
 
-The features are computed twice: in Python for training and in JavaScript for live use. Three checks keep them
-equal:
+The features are computed twice: in Python for training and in JavaScript for live use. Three checks keep the
+browser in line with Python:
 
 - `python -m model.make_js_fixture` trains on the synthetic data of `model/test_train.py` and writes
   `web/predict.fixture.json`. That file has raw browser inputs (counts, history, time, weather) together with the
   features and probability Python computes for them. `web/predict.test.js` requires the JavaScript features to match
   within 1e-9 and the probabilities within 1e-6.
 - `model/test_make_js_fixture.py` regenerates the fixture and fails if the committed file is stale.
-- Every training run writes `web/fixtures.json` (20 test rows with their Python probabilities), and `predict.test.js`
-  checks the real `model.json` against them. In `train.yml` this runs after training and before the commit, so a
-  mismatch blocks the deployment.
+- Every training run writes `web/fixtures.json` (up to 20 test rows per trained target: the feature vectors Python
+  computed and their Python probabilities), and `predict.test.js` applies `predict` with the real `model.json` to
+  those feature vectors. This verifies the exported scaler and coefficients, not the JavaScript feature code (the
+  first check covers that). In `train.yml` this runs after training and before the commit, so a mismatch blocks the
+  deployment.
 
 ### Zones and net flows
 
 `model/flows.py` groups each city's stations into zones with k-means on latitude and longitude:
-k = min(10, max(2, stations / 8), distinct locations). Each zone is named after the station nearest its centre.
+k = min(10, max(2, ⌊stations / 8⌋), distinct locations). Each zone is named after the station nearest its centre.
 For every station, it takes the change in bike count between consecutive snapshots at most 20 minutes apart and
 assigns it to the local hour of the later snapshot. These changes are summed per zone, day and hour, then averaged
 over the days on which that zone and hour had data, separately for weekdays and weekend days. The arrows are
@@ -379,8 +382,8 @@ interesting question: will a station that still has bikes (or docks) run out wit
 
 **What the calibration plot shows.** The test predictions are grouped into ten bins by predicted probability. For
 each bin, the plot puts the mean predicted probability against the share of rows where the event actually happened.
-Points on the diagonal mean that "30 %" really happens about 30 % of the time; points below it mean the model is
-overconfident, above it underconfident.
+Points on the diagonal mean that "30 %" really happens about 30 % of the time; points below it mean the model
+predicts too high a probability (it over-predicts the risk), points above it too low (it under-predicts).
 
 **Why logistic regression is deployed although gradient boosting may score higher.** The page has no server: the
 prediction is computed in the browser from live data. A logistic regression is a few numbers per target that the
