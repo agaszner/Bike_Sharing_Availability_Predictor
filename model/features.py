@@ -58,26 +58,32 @@ def add_lags(df):
 
 def build_profiles(train_df, stations_df):
     """Per network: `_default` hourly target rates, and per station cap, dock and hourly rates (gaps → default).
-    Rates are the mean label over all labelled training rows at that local hour."""
+    cap and dock use all training rows. A target's rates are the mean label at that local hour over the rows
+    eligible for it (Decision 3): "empty" → bikes > 0; "full" → dock station with slots > 0."""
     t = train_df.assign(hour=train_df.ts.dt.tz_convert(TZ).dt.hour,
                         cap=train_df.bikes + train_df.slots.fillna(0), nan_slots=train_df.slots.isna())
+    st = t.groupby(["network", "station_id"]).agg(cap=("cap", "max"), nan_slots=("nan_slots", "any"))
+    virtual = stations_df.set_index(["network", "station_id"]).virtual
+    st["dock"] = [not bool(virtual.get(k, False)) and not bool(ns) for k, ns in zip(st.index, st.nan_slots)]
+    dock_row = st.dock.reindex(pd.MultiIndex.from_frame(t[["network", "station_id"]])).to_numpy(bool)
+    t["empty_30"] = t.empty_30.where((t.bikes > 0).to_numpy())
+    t["full_30"] = t.full_30.where(dock_row & (t.slots > 0).to_numpy())
+
     cols = list(LABELS.values())
     rate = t.groupby(["network", "station_id", "hour"])[cols].mean()
     net_hour = t.groupby(["network", "hour"])[cols].mean()
     net_all = t.groupby("network")[cols].mean()
-    virtual = stations_df.set_index(["network", "station_id"]).virtual
     out = {}
     for net in net_all.index:
         out[net] = {"_default": {
             name: net_hour.loc[net][col].reindex(range(24)).fillna(net_all.loc[net, col]).fillna(0.0).tolist()
             for name, col in LABELS.items()}}
-    for (net, sid), row in t.groupby(["network", "station_id"]).agg(cap=("cap", "max"),
-                                                                    nan_slots=("nan_slots", "any")).iterrows():
+    for (net, sid), row in st.iterrows():
         r = rate.loc[(net, sid)]
         default = out[net]["_default"]
         out[net][sid] = {
             "cap": int(max(1, row.cap)),
-            "dock": not bool(virtual.get((net, sid), False)) and not bool(row.nan_slots),
+            "dock": bool(row.dock),
             **{name: r[col].reindex(range(24)).fillna(pd.Series(default[name])).tolist()
                for name, col in LABELS.items()},
         }

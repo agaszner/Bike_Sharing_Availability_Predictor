@@ -90,3 +90,13 @@ def test_full_matrix_excludes_non_dock_stations():
     df = add_lags(add_labels(snap(list(range(0, 80, 10)), [2] * 8, slots=[1] * 8)))
     X, _ = build_matrix(df, weather_df(), build_profiles(df, stations_df(s=True)), "full")
     assert len(X) == 0                          # station is virtual
+
+
+def test_profile_rates_use_only_eligible_rows():
+    train = add_labels(pd.concat([
+        snap([0, 10, 20, 30, 40, 50], [0, 0, 1, 1, 1, 1], slots=[5, 5, 4, 4, 4, 4], station="d"),
+        snap([0, 10, 20, 30, 40, 50], [2] * 6, slots=[1, 1, 0, 0, 0, 0], station="v"),
+    ]))
+    p = build_profiles(train, stations_df(d=False, v=True))["n"]
+    assert p["d"]["empty"][8] == 0.0            # all labelled rows: 0.25; rows with bikes > 0: 0.0
+    assert p["_default"]["full"][8] == 0.0      # virtual station's full labels do not count
