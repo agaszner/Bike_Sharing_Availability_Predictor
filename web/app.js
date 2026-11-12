@@ -1,7 +1,7 @@
 // Page shell and Live map view: fetching, Leaflet markers, station panel, hash routing. Logic lives in app-logic.js.
 import {stationRisk} from './predict.js';
 import {NETWORKS, parseHash, weatherFrom, stationsFrom, historyFromLatest, riskInput, markerState, stateWords,
-  topRisk, statusText, dockInfo, subtitle, sparkPaths} from './app-logic.js';
+  topRisk, statusText, dockInfo, subtitle, sparkPaths, stationOptions} from './app-logic.js';
 
 export {NETWORKS};
 
@@ -164,12 +164,32 @@ function renderRiskList() {
   if (focusedId) [...list.querySelectorAll('button')].find((b) => b.dataset.id === focusedId)?.focus();
 }
 
+// Keyboard and screen-reader path to every station. Options are rebuilt only when the station list changes.
+const picker = $('#station-select');
+let pickerKey = null;
+function renderPicker() {
+  const opts = stationOptions(state.stations);
+  const key = opts.map((o) => `${o.value}\t${o.label}`).join('\n');
+  if (key !== pickerKey) {
+    pickerKey = key;
+    picker.replaceChildren(new Option('Choose a station…', ''), ...opts.map((o) => new Option(o.label, o.value)));
+  }
+  const value = state.stations.some((s) => s.id === state.selected) ? state.selected : '';
+  if (picker.value !== value) picker.value = value;
+}
+picker.addEventListener('change', () => {
+  const s = state.stations.find((x) => x.id === picker.value);
+  select(s ? s.id : null);
+  if (s) map.panTo([s.lat, s.lon], {animate: !REDUCED});
+});
+
 function renderPanel() {
   const s = state.stations.find((x) => x.id === state.selected);
   $('#hint').hidden = Boolean(s);
   $('#station').hidden = !s;
   if (s) renderStation(s);
   renderRiskList();
+  renderPicker();
 }
 
 function renderStatus() {

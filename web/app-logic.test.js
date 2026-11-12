@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {stationRisk} from './predict.js';
 import {NETWORKS, parseHash, weatherFrom, stationsFrom, historyFromLatest, riskInput, markerState, stateWords,
-  topRisk, statusText, dockInfo, subtitle, sparkPaths} from './app-logic.js';
+  topRisk, statusText, dockInfo, subtitle, sparkPaths, stationOptions} from './app-logic.js';
 
 const synth = JSON.parse(fs.readFileSync(new URL('./predict.fixture.json', import.meta.url), 'utf8'));
 const MIN = 60000;
@@ -38,6 +38,21 @@ test('stationsFrom maps CityBikes stations', () => {
   assert.deepEqual(s, [
     {id: 'a', name: 'A', lat: 1, lon: 2, bikes: 3, slots: null, virtual: true},
     {id: 'b', name: 'B', lat: 1, lon: 2, bikes: 0, slots: 5, virtual: false}]);
+});
+
+test('stationsFrom drops stations whose free_bikes is not a finite number', () => {
+  const st = (id, free_bikes) => ({id, name: id, latitude: 1, longitude: 2, free_bikes, empty_slots: 1});
+  const s = stationsFrom({network: {stations: [st('null', null), st('str', '3'), st('nan', NaN), st('ok', 2)]}});
+  assert.deepEqual(s.map((x) => x.id), ['ok']);
+});
+
+test('stationOptions lists every station by name, locale-aware', () => {
+  const s = [{id: '3', name: 'Zrínyi utca'}, {id: '1', name: 'Állatkert'}, {id: '2', name: 'Bem tér'},
+    {id: '4', name: 'árpád híd'}];
+  assert.deepEqual(stationOptions(s), [
+    {value: '1', label: 'Állatkert'}, {value: '4', label: 'árpád híd'},
+    {value: '2', label: 'Bem tér'}, {value: '3', label: 'Zrínyi utca'}]);
+  assert.deepEqual(stationOptions([]), []);
 });
 
 test('historyFromLatest skips nulls; recent keeps only the last 45 minutes', () => {

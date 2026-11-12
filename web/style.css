@@ -58,6 +58,12 @@ main { flex: 1; min-height: 0; }
 .panel {
   width: 360px; flex: none; overflow-y: auto; padding: 20px; background: #fff; border-left: 1px solid var(--line);
 }
+.picker { display: grid; gap: 4px; margin-bottom: 20px; }
+.picker label { color: var(--muted); font-size: 12px; }
+.picker select {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: #fff; color: var(--ink); font: inherit; font-size: 13px;
+}
 .panel h2 { font-size: 19px; font-weight: 700; }
 .panel h3 { font-size: 13px; font-weight: 600; }
 #st-sub { margin-top: 2px; font-size: 12px; }

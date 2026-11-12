@@ -26,9 +26,15 @@ export function weatherFrom(json) {
   return {temp: c.temperature_2m, precip: c.precipitation, wind: c.wind_speed_10m};
 }
 
+// Stations without a numeric bike count are dropped: they would turn into NaN features.
 export function stationsFrom(json) {
-  return json.network.stations.map((s) => ({id: s.id, name: s.name, lat: s.latitude, lon: s.longitude,
+  return json.network.stations.filter((s) => Number.isFinite(s.free_bikes)).map((s) => ({id: s.id, name: s.name, lat: s.latitude, lon: s.longitude,
     bikes: s.free_bikes, slots: s.empty_slots ?? null, virtual: Boolean(s.extra?.virtual)}));
+}
+
+const collator = new Intl.Collator(undefined, {numeric: true});
+export function stationOptions(stations) {
+  return stations.map((s) => ({value: s.id, label: s.name})).sort((a, b) => collator.compare(a.label, b.label));
 }
 
 // all: every known snapshot (sparkline); recent: only the last 45 minutes (lag features).
