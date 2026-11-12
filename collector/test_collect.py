@@ -13,6 +13,13 @@ def test_station_rows_keeps_null_slots_empty():
     assert station_rows("x", RAW) == [("x", "a", 7, 0), ("x", "b", 0, "")]
 
 
+def test_station_rows_skips_stations_without_a_bike_count():
+    raw = {"network": {"stations": [{"id": "a", "free_bikes": None, "empty_slots": 3},
+                                    {"id": "b", "free_bikes": True, "empty_slots": 3},
+                                    {"id": "c", "free_bikes": 2, "empty_slots": 3}]}}
+    assert station_rows("x", raw) == [("x", "c", 2, 3)]
+
+
 def test_station_meta_flags_virtual():
     assert station_meta(RAW) == [
         {"id": "a", "name": "A tér", "lat": 47.5, "lon": 19.0, "virtual": True},

@@ -56,6 +56,15 @@ def df(synthetic_data):
     return snapshots(str(synthetic_data))
 
 
+def test_snapshots_drop_rows_without_a_bike_count(tmp_path):
+    f = tmp_path / "snapshots" / "2026-11-16" / "0700.csv"
+    f.parent.mkdir(parents=True)
+    f.write_text("network,station_id,bikes,slots\nn,a,3,1\nn,b,,2\nn,c,x,2\n")
+    df = snapshots(str(tmp_path))
+    assert df.station_id.tolist() == ["a"] and df.bikes.tolist() == [3]
+    assert pd.api.types.is_integer_dtype(df.bikes)
+
+
 def test_time_split_is_chronological(df):
     tr, te = time_split(df)
     assert tr.ts.max() < te.ts.min()

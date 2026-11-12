@@ -21,9 +21,11 @@ LATEST_KEEP = 18  # ~3 hours at one run per 10 minutes
 
 
 def station_rows(network, payload):
+    """Stations without an integer bike count are skipped: the snapshot's bikes column is never empty."""
     return [
         (network, s["id"], s["free_bikes"], "" if s["empty_slots"] is None else s["empty_slots"])
         for s in payload["network"]["stations"]
+        if type(s["free_bikes"]) is int
     ]
 
 
