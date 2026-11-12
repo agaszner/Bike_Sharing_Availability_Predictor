@@ -2,6 +2,8 @@
 import {stationRisk} from './predict.js';
 import {NETWORKS, parseHash, weatherFrom, stationsFrom, historyFromLatest, riskInput, markerState, stateWords,
   topRisk, statusText, dockInfo, subtitle, sparkPaths, stationOptions} from './app-logic.js';
+import {mountFlows} from './flows.js';
+import {mountModel} from './model-view.js';
 
 export {NETWORKS};
 
@@ -17,7 +19,7 @@ const initial = parseHash(location.hash);
 export const state = {
   network: initial.network, view: initial.view,
   stations: [], risks: new Map(), model: null, profiles: null, weather: null, flows: null,
-  latest: null, updated: null, failed: false, selected: null,
+  latest: null, updated: null, failed: false, selected: null, loaded: false,
 };
 
 const listeners = [];
@@ -236,7 +238,7 @@ async function loadStatic() {
   } else {
     [model, profiles] = await Promise.all([orNull(getJSON('./model.json')), orNull(getJSON('./profiles.json'))]);
   }
-  Object.assign(state, {model, profiles, flows: await orNull(getJSON('./flows.json'))});
+  Object.assign(state, {model, profiles, flows: await orNull(getJSON('./flows.json')), loaded: true});
 }
 
 let seq = 0;
@@ -292,6 +294,9 @@ document.querySelectorAll('[data-view]').forEach((b) =>
 addEventListener('hashchange', route);
 
 route();
+// after route() so the visible view's container is already unhidden when it mounts
+onViewChange((s) => mountFlows($('#view-flows'), s));
+onViewChange((s) => mountModel($('#view-model'), s));
 renderStatus();
 loadLive();
 setInterval(loadLive, REFRESH_MS);
