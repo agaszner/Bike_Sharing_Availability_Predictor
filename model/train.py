@@ -19,9 +19,13 @@ MIN_POSITIVES = 50
 N_FIXTURES = 20
 
 
+def _cut(df, test_fraction=0.2):
+    return df.ts.min() + (df.ts.max() - df.ts.min()) * (1 - test_fraction)
+
+
 def time_split(df, test_fraction=0.2):
     """Cut at tmin + (1 - test_fraction) * span; train strictly earlier, test from the cut on."""
-    cut = df.ts.min() + (df.ts.max() - df.ts.min()) * (1 - test_fraction)
+    cut = _cut(df, test_fraction)
     return df[df.ts < cut], df[df.ts >= cut]
 
 
@@ -63,21 +67,23 @@ def run(data_dir, out_dir):
     snaps, weather, stations = load.snapshots(data_dir), load.weather(data_dir), load.stations(data_dir)
     df = features.add_lags(features.add_labels(snaps))
     tr, te = time_split(df)
+    # Purge: a train row's label window (t, t + 30 min] must not reach a snapshot at or after the cut.
+    tr = tr[tr.ts < _cut(df) - features.HORIZON]
     nets = NETWORKS + sorted(set(df.network) - set(NETWORKS))
 
     targets, curves, fixtures = {}, {}, {}
     metrics = {k: {} for k in ["all"] + nets}
-    # Profiles and weather from the train period only (no test leakage); an empty train frame trains nothing.
+    # Profiles from the train period only (no test leakage); an empty train frame trains nothing.
+    # Weather is the full frame: a reading at or before t is known at prediction time, as in the browser.
     profiles = features.build_profiles(tr, stations) if not tr.empty else None
-    w_tr = weather[weather.ts < te.ts.min()]
     for t in TARGETS:
         targets[t], curves[t], fixtures[t] = None, None, []
         if profiles is None:
             for k in metrics:
                 metrics[k][t] = _metrics(np.array([]), None, None, None)
             continue
-        X_tr, y_tr = features.build_matrix(tr, w_tr, profiles, t)
-        X_te, y_te = features.build_matrix(te[te.network.isin(profiles)], w_tr, profiles, t)
+        X_tr, y_tr = features.build_matrix(tr, weather, profiles, t)
+        X_te, y_te = features.build_matrix(te[te.network.isin(profiles)], weather, profiles, t)
         y_tr, y_te = y_tr.to_numpy(int), y_te.to_numpy(int)
         p_lr = p_hgb = None
         if y_tr.sum() >= MIN_POSITIVES and (y_tr == 0).any():

@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from model.features import FEATURES
+from model import features
+from model.features import FEATURES, HORIZON
 from model.load import snapshots
 from model.train import run, time_split
 
@@ -90,6 +91,41 @@ def test_fixtures_reproduce_from_exported_coefficients(synthetic_data, tmp_path)
 def test_target_with_too_few_positives_is_null(synthetic_data_never_full, tmp_path):
     m = run(str(synthetic_data_never_full), str(tmp_path))
     assert m["targets"]["full"] is None and m["targets"]["empty"] is not None
+
+
+@pytest.fixture
+def spy(monkeypatch):
+    """Records (input df, X) of every build_matrix call and the df of every build_profiles call."""
+    calls = {"matrix": [], "profiles": []}
+    real_matrix, real_profiles = features.build_matrix, features.build_profiles
+
+    def build_matrix(df, *a):
+        X, y = real_matrix(df, *a)
+        calls["matrix"].append((df, X))
+        return X, y
+
+    def build_profiles(df, *a):
+        calls["profiles"].append(df)
+        return real_profiles(df, *a)
+
+    monkeypatch.setattr(features, "build_matrix", build_matrix)
+    monkeypatch.setattr(features, "build_profiles", build_profiles)
+    return calls
+
+
+def test_matrices_use_the_weather_reading_of_their_own_hour(synthetic_data, tmp_path, spy):
+    run(str(synthetic_data), str(tmp_path))
+    for df, X in spy["matrix"]:                             # train and test matrices alike
+        assert (X.temp == 5.0 + df.ts.loc[X.index].dt.hour % 7).all()
+
+
+def test_train_rows_are_purged_one_horizon_before_the_cut(synthetic_data, tmp_path, spy):
+    df = snapshots(str(synthetic_data))
+    cut = df.ts.min() + (df.ts.max() - df.ts.min()) * 0.8
+    run(str(synthetic_data), str(tmp_path))
+    train_frames = [spy["profiles"][0]] + [d for d, _ in spy["matrix"] if d.ts.max() < cut]
+    assert len(train_frames) == 3                           # train profiles + one train matrix per target
+    assert all(d.ts.max() <= cut - HORIZON for d in train_frames)
 
 
 @pytest.mark.parametrize("steps", [1, 2])
