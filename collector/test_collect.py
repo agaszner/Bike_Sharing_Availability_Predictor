@@ -1,3 +1,5 @@
+import json
+
 from collector import collect
 from collector.collect import station_rows, station_meta, roll_latest
 
@@ -51,8 +53,11 @@ def fake_get_json(url):
 
 
 def test_main_one_network_failing_keeps_the_others(tmp_path, monkeypatch):
-    monkeypatch.setattr(collect, "get_json", fake_get_json)
-    (tmp_path / "stations" / "bicikelj.json").mkdir(parents=True)  # writing it will raise
+    def bicikelj_down(url):
+        if "bicikelj" in url:
+            raise OSError("down")
+        return fake_get_json(url)
+    monkeypatch.setattr(collect, "get_json", bicikelj_down)
     assert collect.main(str(tmp_path)) == 0
     [snap] = tmp_path.glob("snapshots/*/*.csv")
     lines = snap.read_text().splitlines()
@@ -68,3 +73,14 @@ def test_main_all_networks_failing_returns_1(tmp_path, monkeypatch):
         raise OSError("down")
     monkeypatch.setattr(collect, "get_json", down)
     assert collect.main(str(tmp_path)) == 1
+
+
+def test_main_corrupt_latest_still_snapshots_that_network(tmp_path, monkeypatch):
+    monkeypatch.setattr(collect, "get_json", fake_get_json)
+    (tmp_path / "latest").mkdir()
+    (tmp_path / "latest" / "bicikelj.json").write_text("{not json")
+    assert collect.main(str(tmp_path)) == 0
+    [snap] = tmp_path.glob("snapshots/*/*.csv")
+    assert any(l.startswith("bicikelj,") for l in snap.read_text().splitlines())
+    latest = json.loads((tmp_path / "latest" / "bicikelj.json").read_text())
+    assert len(latest["ts"]) == 1 and latest["stations"]["a"] == [[7, 0]]

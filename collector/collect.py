@@ -68,15 +68,24 @@ def main(out_dir):
         try:
             payload = get_json(f"https://api.citybik.es/v2/networks/{network}")
             rows = station_rows(network, payload)
-            (out / "stations" / f"{network}.json").write_text(
-                json.dumps(station_meta(payload), ensure_ascii=False), encoding="utf-8")
-            latest_path = out / "latest" / f"{network}.json"
-            latest = json.loads(latest_path.read_text(encoding="utf-8")) if latest_path.exists() else None
-            latest_path.write_text(json.dumps(roll_latest(latest, ts, rows), separators=(",", ":")), encoding="utf-8")
         except Exception as e:  # one network down must not lose the others
             print(f"{network}: stations failed: {e!r}", file=sys.stderr)
             continue
-        all_rows += rows
+        all_rows += rows  # the snapshot is the primary data; stations/ and latest/ are caches for the site
+
+        try:
+            (out / "stations" / f"{network}.json").write_text(
+                json.dumps(station_meta(payload), ensure_ascii=False), encoding="utf-8")
+            latest_path = out / "latest" / f"{network}.json"
+            try:
+                latest = roll_latest(json.loads(latest_path.read_text(encoding="utf-8")), ts, rows)
+            except Exception as e:  # missing or unreadable: start afresh from this run
+                if latest_path.exists():
+                    print(f"{network}: latest unreadable, restarted: {e!r}", file=sys.stderr)
+                latest = roll_latest(None, ts, rows)
+            latest_path.write_text(json.dumps(latest, separators=(",", ":")), encoding="utf-8")
+        except Exception as e:
+            print(f"{network}: stations/latest failed: {e!r}", file=sys.stderr)
 
         try:
             cur = get_json(
