@@ -139,10 +139,13 @@ function renderRiskList() {
   const top = topRisk(state.stations.map((s) => ({station: s, risk: state.risks.get(s.id).risk})));
   $('#risk').hidden = top.length === 0;
   $('#risk-title').textContent = `Most at risk in ${city().name}`;
-  $('#risk-list').replaceChildren(...top.map(({station, kind, p}) => {
+  const list = $('#risk-list');
+  const focusedId = list.contains(document.activeElement) ? document.activeElement.dataset.id : null;
+  list.replaceChildren(...top.map(({station, kind, p}) => {
     const li = document.createElement('li');
     const btn = document.createElement('button');
     btn.type = 'button';
+    btn.dataset.id = station.id;
     const name = document.createElement('span');
     name.className = 'name';
     name.textContent = station.name;
@@ -157,6 +160,8 @@ function renderRiskList() {
     li.append(btn);
     return li;
   }));
+  // the rebuild (on select and on refresh) would otherwise drop keyboard focus to <body>
+  if (focusedId) [...list.querySelectorAll('button')].find((b) => b.dataset.id === focusedId)?.focus();
 }
 
 function renderPanel() {
