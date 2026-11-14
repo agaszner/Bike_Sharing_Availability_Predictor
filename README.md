@@ -321,35 +321,99 @@ By city, PR-AUC
 
 ## Experiences and lessons learned
 
-> Draft — to be completed with my own notes before hand-in.
+### Tools and agents
 
-**Tools.** I used Claude Code (CLI) as the main agent, with the superpowers plugin for planning and for
-subagent-driven execution: for each task, one implementer subagent and one reviewer subagent, working test-first. I
-used the Figma MCP server to create the three screen designs before writing any code.
+- **Claude Code (CLI)** was the coding agent.
+- **Claude Opus** ran both the main session and every subagent.
+- **The superpowers plugin** for Claude Code supplied the workflow:
+  - `brainstorming` turned the assignment into a design.
+  - `writing-plans` turned the design into a plan of 8 tasks
+    ([docs/superpowers/plans/2026-11-12-bike-availability-predictor.md](docs/superpowers/plans/2026-11-12-bike-availability-predictor.md)).
+  - `subagent-driven-development` executed the plan. Each task had one implementer subagent and one reviewer
+    subagent, and the implementer worked test-first. After the last task, a final reviewer checked the whole branch.
+- **The Figma MCP server** created the three screen designs (Live map, Flows, Model) before any code was written:
+  https://www.figma.com/design/ER3Fejs1NlqKROBYtXBIzX
+- **GitHub Actions** runs the collector, the nightly training and the deployment. Claude Code wrote these
+  workflows.
+- **cron-job.org** is a free external scheduler that starts the collector. I added it by hand (see below).
 
-**Process.** I turned the assignment text into a written plan of 8 tasks. Each task was implemented test-first and
-then reviewed against the plan before the next one started.
+### Key prompts
 
-**Hosting detour.** I first planned a backend on Hugging Face Spaces, but Docker Spaces turned out not to be free any
-more. Render was the next option, but it asks for a card. So the design went back to a static GitHub Pages site,
-with the model's coefficients evaluated in the browser.
+```text
+Project: assignment 23, bike-sharing availability predictor. Live station map of MOL Bubi (Budapest) and three
+other European cities; predict "station will be empty or full within 30 minutes"; show the daily flow patterns
+between parts of each city. 
 
-**What the reviews caught that would have gone unnoticed:**
+Workflow:
+- Use superpowers: brainstorm with me, then write a plan of small tasks, then execute it subagent-driven on Opus,
+  one implementer and one reviewer per task, test-first. Review each task against the plan and question the plan
+  itself, not only compliance.
+- Make the three screens (Live map, Flows, Model) in Figma before writing code.
+- Keep it minimal: stdlib where possible, few dependencies, pinned versions.
 
-- The baseline rate was first computed over rows where the station was already empty, which inflated the baseline.
-- An instruction to use train-period weather only would have evaluated the model with weather effectively switched
-  off.
-- There was no purge gap at the train/test cut.
-- A station with no prediction could have been drawn as a green "available" marker.
-- The browser parity fixture could go stale silently.
-- Station details were not reachable by keyboard.
+Hosting and data (everything must be free):
+- Static site on GitHub Pages. No backend: export the model as JSON and score it in the browser.
+- Collector: GitHub Actions every 10 minutes, Python stdlib only. Save CityBikes snapshots for mol-bubi,
+  wienmobil-rad, bicikelj and slovnaft-bajk, plus Open-Meteo weather, as CSV to an orphan `data` branch.
+- GitHub cron is best-effort, so also trigger the collector from an external scheduler (cron-job.org calling
+  workflow_dispatch). Tell me what I must set up by hand (Pages source, token), and check that runs arrive
+  within the first hour.
 
-**What needed manual attention:**
+Model:
+- Labels: empty (0 bikes) or full (0 free docks) at any snapshot in the next 30 minutes. "Full" only for stations
+  with real docks; check the feed for virtual stations.
+- Train only on rows where the state can change. Features: bikes, slots, fill, change over the last 10 and 30
+  minutes, hour of day, weekend, the station's historical rate for that hour, temperature, rain, wind.
+- Logistic regression deployed; gradient boosting only as an offline comparison; the historical rate as baseline.
+- Time-based train/test split with a 30-minute purge gap. Report PR-AUC and Brier score per city, a
+  precision-recall curve and a calibration plot.
+- A Python-generated fixture that the JavaScript scoring must reproduce exactly.
+- Retrain nightly in GitHub Actions and redeploy only if the model changed.
 
-- GitHub's scheduler did not start the 10-minute collector for hours after the first push, so I started runs by hand
-  and moved the schedule off the top of the hour.
-- Bubi's feed marks every station as virtual, which changed what "full" can mean for Budapest.
+Web:
+- Leaflet + OpenStreetMap. Live map with risk colours, station details and a keyboard-accessible station picker.
+  Stations without a prediction must look "unknown", never "available".
+- Flows: k-means zones with about one zone per 20 stations (5%), named after the station nearest the centre;
+  hourly net flow per zone, arrows between zones, an hour slider and a zone × hour heatmap. Say clearly that this
+  is net imbalance, because CityBikes has no trip data.
+- Model view with the metrics and the comparison to the baseline.
+- A demo mode with clearly marked synthetic numbers until enough real data exists.
+- README: usage, how it works, results, limitations, lessons learned.
+```
 
+### Hosting detour
+
+My first plan was a Python backend on Hugging Face Spaces. Docker Spaces are no longer on the free tier. Render
+was the next option, but it asks for a card. So the design moved to a static GitHub Pages site. The browser
+evaluates the exported coefficients, and a nightly workflow retrains the model and commits the JSON files. This
+also removed a server that would have had to stay awake.
+
+### What the reviews caught
+
+The reviewer subagents found these problems before they reached `main`. Each one has a `fix:` commit:
+
+- The baseline rate was first computed over rows where the station was already empty, which inflated the
+  baseline (`20a23eb`).
+- An instruction in my own plan, to use train-period weather only, would have evaluated the model with weather
+  effectively switched off. There was also no purge gap at the train/test cut (`5a756d3`).
+- A station with no prediction could have been drawn as a green "available" marker (`c0780e1`).
+- The browser parity fixture could go stale without any test failing (`c0780e1`).
+- Station details were not reachable by keyboard (`d080186`, `457f1cd`).
+- The final whole-branch review found data-robustness bugs. Stations missing from the station list were treated
+  as docked (`58b66e8`). Rows without a bike count broke loading (`a28ec7b`). One failing cache file could drop a
+  whole network from a snapshot (`6a659fd`).
+
+### Lessons learned
+
+- **A written plan with a review step per task was worth the overhead.** The most important bugs, a leaky
+  baseline and weather switched off at evaluation, were logic errors. The tests passed with them.
+- **The agent follows the plan even when the plan is wrong.** 
+- **Check infrastructure early, not only code.** The code was correct, but the data collection silently ran at
+  about 2% of the expected rate. A status question the next day found it. For a forecasting task, data is the
+  bottleneck, so the collector should be verified within the first hour.
+- **Free hosting constraints shape the architecture.** Choosing hosting first would have saved the backend
+  detour.
+- **Question the AI about the decisions that you did not make.**.
 ## Repository layout
 
 | Path | Contents |
