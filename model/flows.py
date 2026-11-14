@@ -14,14 +14,15 @@ NETWORKS = ["mol-bubi", "wienmobil-rad", "bicikelj", "slovnaft-bajk"]
 TZ = "Europe/Budapest"
 MAX_GAP = pd.Timedelta(minutes=20)
 DAY_TYPES = ("weekday", "weekend")
+ZONE_SHARE = 0.05  # one zone per 20 stations
 
 
-def assign_zones(stations_df, k_max=10):
+def assign_zones(stations_df):
     """One network's stations -> (station_id -> zone id, zone records named after the station nearest the centroid)."""
     s = stations_df.reset_index(drop=True)
     xy = s[["lat", "lon"]].to_numpy(float)
     # Capped at the distinct locations so KMeans never asks for more clusters than points.
-    k = min(k_max, max(2, len(s) // 8), len(np.unique(xy, axis=0)))
+    k = min(max(2, round(len(s) * ZONE_SHARE)), len(np.unique(xy, axis=0)))
     km = KMeans(n_clusters=k, random_state=0, n_init=10).fit(xy)
     zones = []
     for i, c in enumerate(km.cluster_centers_):

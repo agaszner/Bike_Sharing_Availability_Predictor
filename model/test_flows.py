@@ -27,8 +27,8 @@ def two_station_snaps(days=1, second_day_delta=None):
 
 
 def test_zones_cover_every_station_and_k_scales():
-    zone_of, zones = assign_zones(grid_stations(n=40))        # one network
-    assert zone_of.notna().all() and len(zones) == 5           # 40 // 8
+    zone_of, zones = assign_zones(grid_stations(n=100))       # one network
+    assert zone_of.notna().all() and len(zones) == 5           # 5% of 100
     assert all(z["name"] for z in zones)
 
 

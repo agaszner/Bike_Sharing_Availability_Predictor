@@ -269,7 +269,7 @@ browser in line with Python:
 ### Zones and net flows
 
 `model/flows.py` groups each city's stations into zones with k-means on latitude and longitude:
-k = min(10, max(2, ⌊stations / 8⌋), distinct locations). Each zone is named after the station nearest its centre.
+k = min(max(2, round(5% of stations)), distinct locations), so one zone per about 20 stations. Each zone is named after the station nearest its centre.
 For every station, it takes the change in bike count between consecutive snapshots at most 20 minutes apart and
 assigns it to the local hour of the later snapshot. These changes are summed per zone, day and hour, then averaged
 over the days on which that zone and hour had data, separately for weekdays and weekend days. The arrows are
@@ -349,47 +349,6 @@ with the model's coefficients evaluated in the browser.
 - GitHub's scheduler did not start the 10-minute collector for hours after the first push, so I started runs by hand
   and moved the schedule off the top of the hour.
 - Bubi's feed marks every station as virtual, which changed what "full" can mean for Budapest.
-
-**Key prompts I used:**
-
--
--
--
-
-**What I would do differently:**
-
--
--
-
-## Oral defence notes
-
-**Why a time-based split, and the purge gap.** In use, the model always predicts the future from the past. A random
-split would put snapshots from the same hour of the same day into both training and test, and neighbouring
-snapshots are nearly identical, so the test score would be too optimistic. Splitting by time tests the model on
-later days it never saw. The purge gap is needed because a label looks 30 minutes ahead: without it, the last
-training rows would have labels built from test-period snapshots.
-
-**Why PR-AUC and Brier rather than accuracy.** Stations rarely become empty or full within 30 minutes, so the
-positive class is small. A model that always says "no" would have high accuracy and be useless. PR-AUC (average
-precision) measures how well the model ranks the risky moments above the others, focusing on the rare positive
-class. The page shows a probability, not just a yes or no, so that probability has to mean what it says. The Brier
-score and the calibration plot check that.
-
-**Why only transition rows.** If a station is empty now, it is almost certainly still empty in the next snapshot.
-Including those rows would let the model score well by copying the current state, which says nothing useful. Rows
-where the station is already empty (or full) are excluded and shown grey. The model is judged only on the
-interesting question: will a station that still has bikes (or docks) run out within 30 minutes?
-
-**What the calibration plot shows.** The test predictions are grouped into ten bins by predicted probability. For
-each bin, the plot puts the mean predicted probability against the share of rows where the event actually happened.
-Points on the diagonal mean that "30 %" really happens about 30 % of the time; points below it mean the model
-predicts too high a probability (it over-predicts the risk), points above it too low (it under-predicts).
-
-**Why logistic regression is deployed although gradient boosting may score higher.** The page has no server: the
-prediction is computed in the browser from live data. A logistic regression is a few numbers per target that the
-browser can evaluate in a few lines of JavaScript, with a test that checks it against Python to within 1e-6. Gradient
-boosting is trained on the same rows and its PR-AUC is reported next to it, so the cost of this choice is visible
-rather than hidden.
 
 ## Repository layout
 
