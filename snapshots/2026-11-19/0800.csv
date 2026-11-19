@@ -96,7 +96,7 @@ mol-bubi,2bf8abd7536901e5f934ba93edc5f40b,1,1
 mol-bubi,2c43c36451e83f12593956022f4f0532,3,0
 mol-bubi,2cd39351e55b668e049fd2c0f331182b,2,0
 mol-bubi,2d2e1a98fc3f19e84b6aff895b37ee7a,20,16
-mol-bubi,2df8077fe82a9fa5310e805d79899406,1,1
+mol-bubi,2df8077fe82a9fa5310e805d79899406,0,2
 mol-bubi,2ead1bc3aafac11adddbd3f08241e9ea,5,34
 mol-bubi,2eca5dc391f517a20baaf734a79e9eff,1,1
 mol-bubi,2f17e7c4138242a535475bd2f5fbda7e,0,2
@@ -328,7 +328,7 @@ mol-bubi,8083126cc3ee88009e1e96b14c37acca,1,1
 mol-bubi,813a9a45f7b25a6a46a7c37491673e56,0,2
 mol-bubi,814cbce67350ac6b88315a92159e363f,0,2
 mol-bubi,81bbe413617969f8ba17c337d3a71716,3,0
-mol-bubi,822f2c339fffb17ecdb99111033c127d,1,10
+mol-bubi,822f2c339fffb17ecdb99111033c127d,2,9
 mol-bubi,824792b73dd8463cdef92e8b05fbf27f,3,11
 mol-bubi,8252a95c3048aff272c308d4c4ab96a8,6,37
 mol-bubi,82aa02d5d866714d0a485708ca47dbe9,0,2
@@ -624,7 +624,7 @@ mol-bubi,e41d5d0b19559219aba6fd9749dc7077,0,2
 mol-bubi,e4b84c93f835d3257542fb149e0d9646,13,32
 mol-bubi,e738542f2723cf6425041a55f6dbcdef,0,11
 mol-bubi,e73e0d1a91aef1b99a29d6187a8c1458,0,2
-mol-bubi,e81d57e1a0ac5273f07914d066288b6f,14,24
+mol-bubi,e81d57e1a0ac5273f07914d066288b6f,15,23
 mol-bubi,e8b3adc78a3e065f5e425309c8764151,6,21
 mol-bubi,e8eb2bf4a54aa34691a61d05ad9ef448,11,4
 mol-bubi,e91086492fc80112690a463581d7d63a,8,10
@@ -725,7 +725,7 @@ wienmobil-rad,1d20a3c069f5db9c048e0ff5efe66c62,16,0
 wienmobil-rad,1d3b30db722cd416bd5b83213011c097,14,9
 wienmobil-rad,1d3b561c8a1b4daf5b4ce93765bb0660,17,10
 wienmobil-rad,1d9373a589737cc2bd188dc5d92dd6cb,3,12
-wienmobil-rad,1ebf090335713d07001bda248b841bb6,13,0
+wienmobil-rad,1ebf090335713d07001bda248b841bb6,14,0
 wienmobil-rad,1ed7800c7297232b1106dfa7ee103809,5,
 wienmobil-rad,208c4639a4d6a7abba4a7d816e5ca4ee,11,
 wienmobil-rad,2118a75c7f374e17001fb56edaaf2e66,9,6
@@ -740,7 +740,7 @@ wienmobil-rad,28d65b869c13427a5f695827bbdd09a4,15,8
 wienmobil-rad,29c1cf6a7e8b0f91bd6b9fc99903d181,2,23
 wienmobil-rad,2a92b3fb497750572b03443a8ecbad06,2,
 wienmobil-rad,2a9b6b63f9841f6e2f3cf94603e61802,30,8
-wienmobil-rad,2ae064a80c37171a235725d266946b54,13,0
+wienmobil-rad,2ae064a80c37171a235725d266946b54,14,0
 wienmobil-rad,2b26762a54d5b76a16c35f68697f419b,0,14
 wienmobil-rad,2c204ec969a714433444d5be094170e4,16,1
 wienmobil-rad,2ccc5f3e91f24eab92fd9d90aaa971e8,7,10
@@ -773,7 +773,7 @@ wienmobil-rad,46ebe0f262fdc76e2a295343c6803bb7,18,6
 wienmobil-rad,47972743c46321bbde89b7c6b8b93dd8,23,0
 wienmobil-rad,49cd1075c1812588a8384b96a92af3b0,15,6
 wienmobil-rad,49f1cfb577c3949c434176686db1c367,17,3
-wienmobil-rad,4b090b8d7768ecba9239604ae70d37c6,24,0
+wienmobil-rad,4b090b8d7768ecba9239604ae70d37c6,23,0
 wienmobil-rad,4b158e677f05d81bf6acf8d1bca096a7,25,5
 wienmobil-rad,4b82962d235cc070084cd4a26e3d4ab8,11,3
 wienmobil-rad,4c93640c0d5d4e1bed903f189c13e887,0,
@@ -801,14 +801,14 @@ wienmobil-rad,6b3989a0038617ab0289c344ea59aca4,23,0
 wienmobil-rad,6ceb52d6add69e09ce148c256cc16018,23,1
 wienmobil-rad,6d114c2a32eb866f7d294c713bb7e4e0,29,0
 wienmobil-rad,6dc6222be10192db0190df44ed2d8c3a,20,0
-wienmobil-rad,6e51e6667204763f873c1e2c24f7be99,14,0
+wienmobil-rad,6e51e6667204763f873c1e2c24f7be99,15,0
 wienmobil-rad,7040a6c7b744b0bbcf49ddcedd8477d9,11,
 wienmobil-rad,704a812614e8e8ed523fbd3b30af01b7,28,0
 wienmobil-rad,71083ffab5ba8f52db87be0dca4a6faa,11,0
 wienmobil-rad,7163eb0c060c2a87dee310ba85e57784,5,
 wienmobil-rad,71c75d3258c88225c352bcf12069731f,9,7
 wienmobil-rad,71ddf99ff6335b8365b3d578fbd076c5,3,9
-wienmobil-rad,736686800ae67fd6dc211a0d8e45c112,5,17
+wienmobil-rad,736686800ae67fd6dc211a0d8e45c112,6,16
 wienmobil-rad,73ef30b936c9146757572c2a197f8374,8,6
 wienmobil-rad,745a8762d69ec1b81e5ea4ffb6db7012,22,
 wienmobil-rad,750ce073fff4707e6b1bcd62a96eb579,6,
@@ -833,7 +833,7 @@ wienmobil-rad,818cd002992b54156703e714c30695ea,20,0
 wienmobil-rad,8197d8c9ac6957346ec66664adb9b2e5,14,12
 wienmobil-rad,82d98d58627c0a69db2aa4ca23c0a744,21,2
 wienmobil-rad,82fe8b285456b25413f1f0dbd8269ad0,28,0
-wienmobil-rad,83bb93b01219c226b0f350dd374d84e0,24,12
+wienmobil-rad,83bb93b01219c226b0f350dd374d84e0,25,11
 wienmobil-rad,84985f5965dfbb58fce5d0bf5464418c,22,0
 wienmobil-rad,84a188f8a3c1830ae0149aec31552ca7,0,
 wienmobil-rad,850ae86b3ea4883bb416e0957e3015d7,7,7
@@ -851,8 +851,8 @@ wienmobil-rad,8f0574e30f2cb3276050f9c2652128fc,26,0
 wienmobil-rad,8f13ea76eaf43ff491e40352e23c937d,26,2
 wienmobil-rad,918a0b925e009c86f7c7b0566a989df7,8,4
 wienmobil-rad,92e5e3887dbda09c803eca0f5f1539b2,16,1
-wienmobil-rad,932fddc23f14ae5975b83844e96b969c,17,0
-wienmobil-rad,93fb9cd05417c6ddb07900352f691b0b,15,7
+wienmobil-rad,932fddc23f14ae5975b83844e96b969c,16,0
+wienmobil-rad,93fb9cd05417c6ddb07900352f691b0b,14,8
 wienmobil-rad,94964425658103eec14566b3d9dfdaa5,1,
 wienmobil-rad,966d1c302ee8945cfce86c2196d869c5,4,18
 wienmobil-rad,97bdf963ad352d292bbf719133254ae9,16,6
@@ -875,7 +875,7 @@ wienmobil-rad,afb13558b0deb328b86a3d5e2676c029,14,
 wienmobil-rad,afbc807b7360f831b228757412faf17a,8,7
 wienmobil-rad,b12299bfb9c629ad438c4a2c9bacacdb,9,1
 wienmobil-rad,b24d56a8813eb6d8e1815226f2c21ef7,12,2
-wienmobil-rad,b2e291d1dbe46bee5f29240238e105d0,11,15
+wienmobil-rad,b2e291d1dbe46bee5f29240238e105d0,10,16
 wienmobil-rad,b2e664f883009ee14fe5b123b419fe69,28,8
 wienmobil-rad,b500ee5399eb84f452db7341f579b596,27,2
 wienmobil-rad,b5871423303289e836f39b3e52e867c6,40,0
@@ -895,7 +895,7 @@ wienmobil-rad,c0a66bdc49db667cac898e1e23ff2a91,10,
 wienmobil-rad,c0e87faabfd723c302900d57c60fe731,3,
 wienmobil-rad,c106e827b89b0d9a29428123180d4318,17,8
 wienmobil-rad,c13c4232940d8a8aec59bf4de035b44f,3,5
-wienmobil-rad,c1408b6b0fee6b50bfeab60af6227e03,3,20
+wienmobil-rad,c1408b6b0fee6b50bfeab60af6227e03,2,21
 wienmobil-rad,c17191107077e4851304cc704300836b,10,4
 wienmobil-rad,c1ed60a118180a59ca38c253c4cbe440,8,5
 wienmobil-rad,c2bb69d720d1168df8c699fa85d3c5da,25,0
@@ -911,7 +911,7 @@ wienmobil-rad,cb2dad123ce73800a03b55cf831193dd,24,0
 wienmobil-rad,cbd6a87ec437b2644685c61da0b282a3,24,
 wienmobil-rad,cd3f5940c66b28dbaac48d79448065c4,12,5
 wienmobil-rad,cd93658010f3f4c22f6dccb79084f5d8,4,5
-wienmobil-rad,ce1f6ab36ef1f05ffd9f003f07f06ca0,25,5
+wienmobil-rad,ce1f6ab36ef1f05ffd9f003f07f06ca0,27,3
 wienmobil-rad,ce440c67b16552f69ab311eb419a00bd,16,3
 wienmobil-rad,cf3d23bf09354783a51ffeb7326d8bd9,5,
 wienmobil-rad,cfe6c805ab37315a8f5bdf886fffd75a,2,
@@ -1078,7 +1078,7 @@ slovnaft-bajk,32ba2bddebc6099e06e2786e9e62af3e,1,14
 slovnaft-bajk,334db851758b65776a81efa537e67ea5,0,20
 slovnaft-bajk,343893bfdb05c50a7fadd5ab7d9056d1,0,7
 slovnaft-bajk,385f9ffcb14715acc2f7f6bfd0d6034b,2,14
-slovnaft-bajk,397ce705295bf34ffbb2d1a11e980534,3,14
+slovnaft-bajk,397ce705295bf34ffbb2d1a11e980534,4,14
 slovnaft-bajk,3a84a4537e980ea4de893bd66ef7440e,0,14
 slovnaft-bajk,3ac2bdc36b17306ad96e1e28c522c495,2,15
 slovnaft-bajk,43715c727b6047907f08957174d81725,1,8
@@ -1142,8 +1142,8 @@ slovnaft-bajk,df9640fd10d60d126893002ffd52633d,3,11
 slovnaft-bajk,e3d5f4769f44b1227b2908c31cfec587,0,12
 slovnaft-bajk,e94ec8014a2971112d0d04e4b3d9651a,0,10
 slovnaft-bajk,e9cf25555b2ab77ca9ca8cc379814d98,0,14
-slovnaft-bajk,f5e1c28c9f2eba88fbaea3f42f84b329,1,12
-slovnaft-bajk,f6462b03d1bb14e481138b15a935aa4b,2,22
+slovnaft-bajk,f5e1c28c9f2eba88fbaea3f42f84b329,2,12
+slovnaft-bajk,f6462b03d1bb14e481138b15a935aa4b,3,22
 slovnaft-bajk,f6bd5b2fb1e91700b5348183eefd0029,3,7
 slovnaft-bajk,fab02f1549bb20713b8b49834a5bbfa0,2,14
 slovnaft-bajk,fd6a701ea52a6215c2a83ff920322b76,2,14
