@@ -194,7 +194,11 @@ The model sees 13 numbers per station and moment (`FEATURES` in `model/features.
 7. `hour_sin` and 8. `hour_cos`: the local (Europe/Budapest) time of day as a fractional hour, on a circle so that
    23:59 and 00:00 are close.
 9. `is_weekend`: 1 on Saturday and Sunday (local time).
-10. `base`: the station's usual rate of this outcome at this local hour (see Baseline).
+10. `base`: the station's usual rate of this outcome at this local hour (see Baseline). For training rows it is
+    computed out-of-fold: the training days are dealt into 4 interleaved folds, and a row's rate comes only from
+    the other folds' days (`oof_base` in `model/features.py`). The in-sample rate contains the row's own label. With
+    it, the model put far too much weight on `base`: test rows it scored around 0.98 ran empty only 8 % of the
+    time, and its Brier score was worse than the baseline's.
 11. `temp`, 12. `precip`, 13. `wind`: temperature, precipitation and wind speed from Open-Meteo. In training, the
     latest reading for the city at or before *t*, if it is at most 60 minutes old, otherwise the median of all
     readings. In the browser, the current reading; if the weather request fails, the model's mean for that feature.

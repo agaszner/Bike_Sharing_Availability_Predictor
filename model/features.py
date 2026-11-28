@@ -91,6 +91,28 @@ def build_profiles(train_df, stations_df):
     return out
 
 
+def oof_base(df, stations_df, X, target, k=4):
+    """`base` for the rows of X (built from `df`), taken from profiles of the other local days only: days are dealt
+    into k interleaved folds and a row's rate comes from the folds it is not in. In-sample rates contain the row's
+    own label (target leakage): the model learnt to trust `base` far too much and was overconfident on test days.
+    Fewer than 2 days → X.base unchanged. A network missing from the other folds keeps X.base."""
+    day = df.ts.dt.tz_convert(TZ).dt.date
+    days = sorted(day.unique())
+    k = min(k, len(days))
+    base = X.base.copy()
+    if k < 2:
+        return base
+    fold = day.map({d: i % k for i, d in enumerate(days)})
+    rows = df.loc[X.index]
+    hour = rows.ts.dt.tz_convert(TZ).dt.hour.to_numpy()
+    for f in range(k):
+        p = build_profiles(df[fold != f], stations_df)
+        mine = (fold.loc[X.index] == f).to_numpy()
+        base[mine] = [p[n].get(s, p[n]["_default"])[target][h] if n in p else b
+                      for n, s, h, b in zip(rows.network[mine], rows.station_id[mine], hour[mine], base[mine])]
+    return base
+
+
 def build_matrix(df, weather_df, profiles, target):
     """Rows eligible for `target` ("empty": bikes > 0; "full": dock station with slots > 0) with a label.
     Unknown stations: cap = max(1, bikes + slots), base from `_default`, not dock.

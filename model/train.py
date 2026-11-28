@@ -83,6 +83,7 @@ def run(data_dir, out_dir):
                 metrics[k][t] = _metrics(np.array([]), None, None, None)
             continue
         X_tr, y_tr = features.build_matrix(tr, weather, profiles, t)
+        X_tr["base"] = features.oof_base(tr, stations, X_tr, t)   # test rows keep the train-period profiles
         X_te, y_te = features.build_matrix(te[te.network.isin(profiles)], weather, profiles, t)
         y_tr, y_te = y_tr.to_numpy(int), y_te.to_numpy(int)
         p_lr = p_hgb = None

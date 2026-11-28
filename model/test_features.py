@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from model.features import FEATURES, add_labels, add_lags, build_matrix, build_profiles
+from model.features import FEATURES, add_labels, add_lags, build_matrix, build_profiles, oof_base
 
 T0 = pd.Timestamp("2026-11-16 07:00", tz="UTC")
 
@@ -111,3 +111,18 @@ def test_station_missing_from_station_list_is_not_dock():
     assert p["n"]["gone"]["dock"] is False      # complete slots, but absent from stations/<network>.json
     X, _ = build_matrix(df, weather_df(), p, "full")
     assert len(X) == 0
+
+
+def test_oof_base_never_uses_the_rows_own_day():
+    minutes = [0, 10, 20, 30, 40, 50]
+    df = add_lags(add_labels(pd.concat([
+        snap(minutes, [1, 0, 1, 1, 1, 1], slots=[5] * 6),                  # day 1, 08:00 local: empty rate 1/3
+        snap([1440 + m for m in minutes], [2] * 6, slots=[4] * 6),          # day 2, same hour: never empty
+    ], ignore_index=True)))
+    st = stations_df(s=False)
+    X, _ = build_matrix(df, weather_df(), build_profiles(df, st), "empty")
+    assert np.allclose(X.base, 1 / 7)                   # in-sample: 1 positive in 3 + 4 labelled rows
+    base = oof_base(df, st, X, "empty")
+    day1 = df.ts.loc[X.index] < T0 + pd.Timedelta(days=1)
+    assert np.allclose(base[day1], 0.0) and np.allclose(base[~day1], 1 / 3)
+    assert base.index.equals(X.index)
