@@ -37,10 +37,17 @@ def _iso(ts):
     return ts.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _metrics(y, p_lr, p_hgb, base):
+def _threshold(y, p):
+    """The probability cut with the highest F1 on these (training) rows."""
+    precision, recall, th = precision_recall_curve(y, p)
+    f1 = 2 * precision * recall / np.maximum(precision + recall, 1e-12)
+    return float(th[np.argmax(f1[:-1])])
+
+
+def _metrics(y, p_lr, p_hgb, base, threshold=None):
     n, pos = len(y), int(y.sum())
     m = {"n": n, "pos_rate": _r(pos / n) if n else None, "pr_auc": None, "pr_auc_baseline": None,
-         "pr_auc_hgb": None, "brier": None, "brier_baseline": None}
+         "pr_auc_hgb": None, "brier": None, "brier_baseline": None, "precision": None, "recall": None}
     if pos == 0:
         return m
     m["pr_auc_baseline"] = _r(average_precision_score(y, base))
@@ -49,6 +56,9 @@ def _metrics(y, p_lr, p_hgb, base):
         m["pr_auc"] = _r(average_precision_score(y, p_lr))
         m["pr_auc_hgb"] = _r(average_precision_score(y, p_hgb))
         m["brier"] = _r(brier_score_loss(y, p_lr))
+        flag = p_lr >= threshold
+        m["precision"] = _r(y[flag].mean()) if flag.any() else None
+        m["recall"] = _r(y[flag].sum() / pos)
     return m
 
 
@@ -86,13 +96,14 @@ def run(data_dir, out_dir):
         X_tr["base"] = features.oof_base(tr, stations, X_tr, t)   # test rows keep the train-period profiles
         X_te, y_te = features.build_matrix(te[te.network.isin(profiles)], weather, profiles, t)
         y_tr, y_te = y_tr.to_numpy(int), y_te.to_numpy(int)
-        p_lr = p_hgb = None
+        p_lr = p_hgb = thr = None
         if y_tr.sum() >= MIN_POSITIVES and (y_tr == 0).any():
             lr = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000)).fit(X_tr, y_tr)
             hgb = HistGradientBoostingClassifier(random_state=0).fit(X_tr, y_tr)
             sc, cl = lr[0], lr[-1]
             targets[t] = {"mean": sc.mean_.tolist(), "std": sc.scale_.tolist(),   # scale_ is 1.0 for constant features
-                          "coef": cl.coef_[0].tolist(), "intercept": float(cl.intercept_[0])}
+                          "coef": cl.coef_[0].tolist(), "intercept": float(cl.intercept_[0]),
+                          "threshold": (thr := _threshold(y_tr, lr.predict_proba(X_tr)[:, 1]))}
             if len(X_te):
                 p_lr, p_hgb = lr.predict_proba(X_te)[:, 1], hgb.predict_proba(X_te)[:, 1]
                 sample = X_te.sample(min(N_FIXTURES, len(X_te)), random_state=0)
@@ -100,11 +111,11 @@ def run(data_dir, out_dir):
                                for x, p in zip(sample.to_numpy(float), lr.predict_proba(sample)[:, 1])]
         base = X_te.base.to_numpy(float)
         net = te.network.loc[X_te.index].to_numpy()
-        metrics["all"][t] = _metrics(y_te, p_lr, p_hgb, base)
+        metrics["all"][t] = _metrics(y_te, p_lr, p_hgb, base, thr)
         for k in nets:
             s = net == k
             metrics[k][t] = _metrics(y_te[s], None if p_lr is None else p_lr[s], None if p_hgb is None else p_hgb[s],
-                                     base[s])
+                                     base[s], thr)
         if p_lr is not None and y_te.sum() > 0:
             curves[t] = {"pr": _pr(y_te, p_lr), "pr_baseline": _pr(y_te, base), "calibration": _calibration(y_te, p_lr)}
 

@@ -44,10 +44,15 @@ Every station is a dot. The page reloads live counts every minute. The colour is
 
 | Colour | Meaning |
 |---|---|
-| Green | Available: neither probability reaches 50 %, or there is no prediction and the station has bikes |
-| Orange | Likely empty within 30 min: the probability of running out of bikes is at least 50 % and the higher one |
-| Purple | Likely full within 30 min: the probability of no free dock is at least 50 % and the higher one |
+| Green | Available: neither probability reaches its alert threshold, or there is no prediction and the station has bikes |
+| Orange | May run empty within 30 min: the probability of running out of bikes reaches its threshold, and it is the higher one of the targets that reach theirs |
+| Purple | May fill up within 30 min: the same for the probability of no free dock |
 | Grey | Empty or full now: the station has 0 bikes, or it is a docked station with 0 free docks; it is not scored |
+
+Each target has its own alert threshold. Training picks it as the probability cut with the highest F1 score on the
+training rows, and the Model view shows it with the precision and recall it gives on the test days. The events are
+rare (well under 1 % of rows), so the thresholds are far below 50 %, and an orange or purple dot means "clearly
+higher risk than usual", not "probably". A model file without thresholds falls back to 0.5.
 
 Hovering a dot shows its name, bike count and state. Clicking a dot, or choosing a station in the **Station**
 picker above the panel (which also works from the keyboard), opens the panel on the right:
@@ -68,9 +73,9 @@ weekend day. The heatmap on the right shows all zones and all 24 hours at once, 
 ### Model
 
 The Model view reports the test results of the current model: PR-AUC for "runs empty" and "fills up", each next to
-the baseline, the Brier score with its baseline, and the length of the test window. Below are a precision-recall
-curve, a calibration plot and a per-city PR-AUC table that also shows gradient boosting. The **Runs empty / Fills up**
-switch changes the target. Until the first successful training the view says that the model has not been trained.
+the baseline, the Brier score with its baseline, the map alert threshold with its test precision and recall, and the
+length of the test window. Below are a precision-recall curve, a calibration plot and a per-city PR-AUC table that
+also shows gradient boosting. The **Runs empty / Fills up** switch changes the target. Until the first successful training the view says that the model has not been trained.
 
 ### Demo switch
 
@@ -318,7 +323,8 @@ By city, PR-AUC
   and gaps occur. Labels need at least 2 snapshots in the 30-minute window, and the lag features use whichever
   snapshot is closest to 10 or 30 minutes old.
 - **A few weeks of November data.** There is no seasonality: the model has not seen summer, holidays or snow.
-- **Untuned threshold.** A station turns orange or purple at a probability of 0.5. The threshold was not tuned.
+- **The alert threshold maximises F1.** It treats a missed alert and a false alarm as equally bad. A rider might
+  prefer fewer false alarms; a rebalancing crew might prefer fewer misses.
 - **Third-party services.** The live page depends on CityBikes, Open-Meteo, raw.githubusercontent.com (for the recent
   history), the OpenStreetMap tile server and unpkg.com (which serves Leaflet; without it no map renders). If
   CityBikes fails, the page says that live data is unavailable.

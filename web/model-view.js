@@ -122,6 +122,9 @@ function render(root, model, demo) {
       prCard('empty'), prCard('full'),
       card(`Brier score · ${TARGETS[target]} (lower is better)`, fmtMetric(m?.brier, BRIER_DIGITS),
         `baseline ${fmtMetric(m?.brier_baseline, BRIER_DIGITS)}`),
+      card(`Map alert · ${TARGETS[target]}`, Number.isFinite(model.targets[target]?.threshold)
+        ? `p ≥ ${fmtMetric(model.targets[target].threshold)}` : '—',
+        `precision ${fmtMetric(m?.precision)}, recall ${fmtMetric(m?.recall)} on test`),
       card('Test window', days ? `${days} ${days === 1 ? 'day' : 'days'}` : '—',
         `${fmtCount(win?.rows)} station snapshots`)),
     el('div', {class: 'mgrid'}, ...charts(model, m), table(model)),

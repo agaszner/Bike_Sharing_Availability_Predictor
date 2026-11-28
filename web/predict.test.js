@@ -67,8 +67,22 @@ test('stationRisk: dock with no free slot is off, null slots gives no full predi
   assert.equal(stationRisk(base, {targets: {empty: null, full: null}}).state, 'unknown');
   const r = stationRisk(base, model);
   assert.ok(r.pEmpty > 0 && r.pEmpty < 1 && r.pFull > 0 && r.pFull < 1);
-  assert.equal(stationRisk({...base, threshold: 0}, model).state, r.pEmpty >= r.pFull ? 'empty' : 'full');
-  assert.equal(stationRisk({...base, threshold: 1.01}, model).state, 'ok');
+  // a model without exported thresholds falls back to input.threshold
+  const {threshold: _e, ...empty} = model.targets.empty, {threshold: _f, ...full} = model.targets.full;
+  const old = {...model, targets: {empty, full}};
+  assert.equal(stationRisk({...base, threshold: 0}, old).state, r.pEmpty >= r.pFull ? 'empty' : 'full');
+  assert.equal(stationRisk({...base, threshold: 1.01}, old).state, 'ok');
+});
+test('stationRisk compares each target with its own threshold', () => {
+  const r = stationRisk(base, model);
+  const [lo, hi] = r.pEmpty < r.pFull ? ['empty', 'full'] : ['full', 'empty'];
+  const p = {empty: r.pEmpty, full: r.pFull};
+  const withThr = (thr) => ({...model, targets: {empty: {...model.targets.empty, threshold: thr.empty},
+    full: {...model.targets.full, threshold: thr.full}}});
+  // the higher probability is under its own threshold and the lower one reaches its own: the lower one wins
+  assert.equal(stationRisk(base, withThr({[lo]: p[lo], [hi]: p[hi] + 1e-9})).state, lo);
+  assert.equal(stationRisk(base, withThr({empty: p.empty + 1e-9, full: p.full + 1e-9})).state, 'ok');
+  assert.equal(stationRisk(base, withThr({empty: p.empty, full: p.full})).state, hi);
 });
 test('stationRisk is unknown when no probability is computed, but off still wins', () => {
   const onlyFull = {...model, targets: {empty: null, full: model.targets.full}};

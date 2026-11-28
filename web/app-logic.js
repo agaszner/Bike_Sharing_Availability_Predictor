@@ -59,7 +59,7 @@ export function markerState(risk, bikes) {
   return bikes > 0 ? 'ok' : 'off';
 }
 
-const WORDS = {ok: 'Available', empty: 'Likely empty within 30 min', full: 'Likely full within 30 min'};
+const WORDS = {ok: 'Available', empty: 'May run empty within 30 min', full: 'May fill up within 30 min'};
 export function stateWords(risk, bikes) {
   const s = markerState(risk, bikes);
   return s === 'off' ? (bikes > 0 ? 'Full now' : 'Empty now') : WORDS[s];

@@ -56,7 +56,10 @@ export function stationRisk(input, model) {
   };
   const pEmpty = p('empty'), pFull = dock && input.slots != null ? p('full') : null;
   if (pEmpty === null && pFull === null) return {state: 'unknown', pEmpty, pFull};
-  const hi = Math.max(pEmpty ?? -1, pFull ?? -1);
-  const state = hi < input.threshold ? 'ok' : hi === pEmpty ? 'empty' : 'full';
+  // Each target has its own threshold (tuned in training; input.threshold for a model without one). Among the
+  // targets at or above their threshold the higher probability wins, "empty" on a tie.
+  const over = [['empty', pEmpty], ['full', pFull]]
+    .filter(([name, q]) => q !== null && q >= (model.targets[name].threshold ?? input.threshold));
+  const state = over.length ? over.reduce((a, b) => (b[1] > a[1] ? b : a))[0] : 'ok';
   return {state, pEmpty, pFull};
 }

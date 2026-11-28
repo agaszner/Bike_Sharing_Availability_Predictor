@@ -78,6 +78,8 @@ def test_run_writes_schema_and_beats_chance(synthetic_data, tmp_path):
         assert len(m["targets"][t]["coef"]) == 13 and all(s > 0 for s in m["targets"][t]["std"])
         a = m["metrics"]["all"][t]
         assert 0 <= a["pr_auc"] <= 1 and a["pr_auc"] > a["pos_rate"]
+        assert 0 < m["targets"][t]["threshold"] < 1
+        assert 0 <= a["precision"] <= 1 and 0 <= a["recall"] <= 1
         assert len(m["curves"][t]["pr"]) <= 50
     assert json.loads((tmp_path / "model.json").read_text()) == m
     assert set(json.loads((tmp_path / "profiles.json").read_text())) == {"n1", "n2"}

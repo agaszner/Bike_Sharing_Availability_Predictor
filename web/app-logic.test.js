@@ -89,8 +89,8 @@ test('markerState: unknown is coloured from live counts only', () => {
 
 test('stateWords says the status in words', () => {
   assert.equal(stateWords({state: 'ok'}, 3), 'Available');
-  assert.equal(stateWords({state: 'empty'}, 3), 'Likely empty within 30 min');
-  assert.equal(stateWords({state: 'full'}, 3), 'Likely full within 30 min');
+  assert.equal(stateWords({state: 'empty'}, 3), 'May run empty within 30 min');
+  assert.equal(stateWords({state: 'full'}, 3), 'May fill up within 30 min');
   assert.equal(stateWords({state: 'off'}, 0), 'Empty now');
   assert.equal(stateWords({state: 'off'}, 5), 'Full now');
   assert.equal(stateWords({state: 'unknown'}, 2), 'Available');
